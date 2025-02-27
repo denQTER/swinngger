@@ -23,7 +23,7 @@ async def error(update: Update, context: CallbackContext):
 
 # Основной код
 def main():
-    TOKEN = "7824019423:AAEcNqDqUzGxrSPbft13zH4M2FnoabEqDr8"
+    TOKEN = "7824019423:AAHE2VH8Q1vDkLK9bceaKMPMhrzsSOdxY5Y"
 
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("swinngger_volosati_pidor", send_random_photo))
