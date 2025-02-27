@@ -1,43 +1,62 @@
-import random
-import os
-from flask import Flask, request
+import logging
+from flask import Flask
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
+import os
+
+# Включаем логирование для отслеживания ошибок
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Создаем Flask-приложение
+app = Flask(__name__)
+
+# Токен вашего бота
+TOKEN = "7824019423:AAHE2VH8Q1vDkLK9bceaKMPMhrzsSOdxY5Y"
 
 # Путь к папке с фото
 PHOTO_FOLDER = "photos"
 
-app = Flask(__name__)
-
-# Функция для выбора случайного фото
+# Функция для отправки случайного фото
 async def send_random_photo(update: Update, context: CallbackContext):
-    photo_list = [f for f in os.listdir(PHOTO_FOLDER) if f.lower().endswith((".png", ".jpg", ".jpeg"))]  # Фильтруем только изображения
+    import random
+    import os
+
+    photo_list = [f for f in os.listdir(PHOTO_FOLDER) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
     if not photo_list:
         await update.message.reply_text("Нет доступных фото.")
         return
 
     photo_path = os.path.join(PHOTO_FOLDER, random.choice(photo_list))
     with open(photo_path, "rb") as photo:
-        await update.message.reply_photo(photo, caption="Спасибо что вызвали волосатое чмо, можете полюбоваться мной перед тем как плюнуть в монитор")
+        await update.message.reply_photo(photo)
 
-# Обработчик команды /swinngger_volosati_pidor
-async def handle_command(update: Update, context: CallbackContext):
-    await send_random_photo(update, context)
+# Функция для обработки команды /start
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text("Спасибо что вызвали волосатое чмо, можете полюбоваться мной перед тем как плюнуть в монитор")
 
-# Функция, которая будет запускать бота
+# Функция для запуска бота
 def start_bot():
-    TOKEN = "7824019423:AAHE2VH8Q1vDkLK9bceaKMPMhrzsSOdxY5Y"
-    app_telegram = Application.builder().token(TOKEN).build()
-    app_telegram.add_handler(CommandHandler("swinngger_volosati_pidor", handle_command))
+    application = Application.builder().token(TOKEN).build()
 
-    print("Бот запущен...")
-    app_telegram.run_polling()
+    # Добавление команд
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("swinngger_volosati_pidor", send_random_photo))
 
-# Запуск приложения Flask
+    application.run_polling()
+
+# Запуск Flask-приложения
 @app.route('/')
-def hello():
-    return "Бот работает на Flask и Render!"
+def home():
+    return "Flask-приложение работает!"
 
+# Запуск приложения и бота
 if __name__ == "__main__":
-    start_bot()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    from threading import Thread
+
+    # Запуск бота в отдельном потоке
+    bot_thread = Thread(target=start_bot)
+    bot_thread.start()
+
+    # Запуск Flask-приложения
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
