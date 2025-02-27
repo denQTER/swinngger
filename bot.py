@@ -1,45 +1,38 @@
-import random
 import os
+import random
 from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext
-import logging
-
-# Логирование
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Получаем токен из переменных окружения
-TOKEN = os.getenv("7824019423:AAEcNqDqUzGxrSPbft13zH4M2FnoabEqDr8")
-PORT = int(os.environ.get("PORT", 8443))
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 
 # Папка с фото
 PHOTO_FOLDER = "photos"
 
-# Функция для отправки случайного фото
+# Функция для отправки случайного фото с текстом
 async def send_random_photo(update: Update, context: CallbackContext):
     photo_list = [f for f in os.listdir(PHOTO_FOLDER) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
+    
     if not photo_list:
         await update.message.reply_text("Нет доступных фото.")
         return
-
+    
     photo_path = os.path.join(PHOTO_FOLDER, random.choice(photo_list))
     with open(photo_path, "rb") as photo:
-        await update.message.reply_photo(photo, caption="Вот твоя картинка, Волосатый Пидор!")
+        await update.message.reply_photo(photo, caption="Спасибо что вызвали волосатое чмо, можете полюбоваться мной перед тем как плюнуть в монитор")
 
-# Создаём бота
-app = Application.builder().token(TOKEN).build()
-app.add_handler(CommandHandler("swinngger_volosati_pidor", send_random_photo))
+# Функция старта
+async def start(update: Update, context: CallbackContext):
+    await update.message.reply_text("Привет! Напиши /swinngger_volosati_pidor, чтобы получить случайное фото.")
 
-# Запуск вебхука
-async def main():
-    logger.info("Бот запущен...")
-    await app.bot.set_webhook(url=f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}/{TOKEN}")
-    await app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=TOKEN
-    )
+# Основной код
+def main():
+    TOKEN = "7824019423:AAEcNqDqUzGxrSPbft13zH4M2FnoabEqDr8"  # Вставь сюда новый токен!
+
+    app = Application.builder().token(TOKEN).build()
+    
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("swinngger_volosati_pidor", send_random_photo))
+
+    print("Бот запущен...")
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    main()
