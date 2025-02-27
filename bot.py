@@ -1,38 +1,38 @@
-import os
 import random
+import os
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackContext
 
-# Папка с фото
+# Путь к папке с фото
 PHOTO_FOLDER = "photos"
 
-# Функция для отправки случайного фото с текстом
+# Функция для выбора случайного фото
 async def send_random_photo(update: Update, context: CallbackContext):
-    photo_list = [f for f in os.listdir(PHOTO_FOLDER) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
-    
+    photo_list = [f for f in os.listdir(PHOTO_FOLDER) if f.lower().endswith((".png", ".jpg", ".jpeg"))]  # Фильтруем только изображения
     if not photo_list:
         await update.message.reply_text("Нет доступных фото.")
         return
-    
-    photo_path = os.path.join(PHOTO_FOLDER, random.choice(photo_list))
+
+    photo_path = os.path.join(PHOTO_FOLDER, random.choice(photo_list))  
     with open(photo_path, "rb") as photo:
         await update.message.reply_photo(photo, caption="Спасибо что вызвали волосатое чмо, можете полюбоваться мной перед тем как плюнуть в монитор")
 
-# Функция старта
-async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text("Привет! Напиши /swinngger_volosati_pidor, чтобы получить случайное фото.")
+# Обработчик ошибок
+async def error(update: Update, context: CallbackContext):
+    print(f"Ошибка: {context.error}")
 
 # Основной код
 def main():
-    TOKEN = "7824019423:AAEcNqDqUzGxrSPbft13zH4M2FnoabEqDr8"  # Вставь сюда новый токен!
+    TOKEN = "7824019423:AAEcNqDqUzGxrSPbft13zH4M2FnoabEqDr8"
 
     app = Application.builder().token(TOKEN).build()
-    
-    app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("swinngger_volosati_pidor", send_random_photo))
 
+    # Добавляем обработчик ошибок
+    app.add_error_handler(error)
+
     print("Бот запущен...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
