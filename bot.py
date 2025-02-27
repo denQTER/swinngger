@@ -1,45 +1,45 @@
-import logging
 import random
 import os
 from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackContext, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, CallbackContext
+import logging
 
-# Настроим логирование
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+# Логирование
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Путь к папке с фото
+# Получаем токен из переменных окружения
+TOKEN = os.getenv("7824019423:AAEcNqDqUzGxrSPbft13zH4M2FnoabEqDr8")
+PORT = int(os.environ.get("PORT", 8443))
+
+# Папка с фото
 PHOTO_FOLDER = "photos"
 
-# Функция для выбора случайного фото
+# Функция для отправки случайного фото
 async def send_random_photo(update: Update, context: CallbackContext):
-    photo_list = [f for f in os.listdir(PHOTO_FOLDER) if f.lower().endswith((".png", ".jpg", ".jpeg"))]  # Фильтруем только изображения
-    if not photo_list:  
+    photo_list = [f for f in os.listdir(PHOTO_FOLDER) if f.lower().endswith((".png", ".jpg", ".jpeg"))]
+    if not photo_list:
         await update.message.reply_text("Нет доступных фото.")
         return
 
-    photo_path = os.path.join(PHOTO_FOLDER, random.choice(photo_list))  
+    photo_path = os.path.join(PHOTO_FOLDER, random.choice(photo_list))
     with open(photo_path, "rb") as photo:
-        await update.message.reply_photo(photo)
+        await update.message.reply_photo(photo, caption="Вот твоя картинка, Волосатый Пидор!")
 
-# Функция обработки ошибок
-def error(update: Update, context: CallbackContext):
-    """Логирование ошибок, вызвавших исключение"""
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
+# Создаём бота
+app = Application.builder().token(TOKEN).build()
+app.add_handler(CommandHandler("swinngger_volosati_pidor", send_random_photo))
 
-# Основной код
-def main():
-    TOKEN = "7824019423:AAEcNqDqUzGxrSPbft13zH4M2FnoabEqDr8"
-
-    app = Application.builder().token(TOKEN).build()
-    app.add_handler(CommandHandler("swinngger_volosati_pidor", send_random_photo))
-
-    # Добавляем обработчик ошибок
-    app.add_error_handler(error)
-
-    print("Бот запущен...")
-    app.run_polling()
+# Запуск вебхука
+async def main():
+    logger.info("Бот запущен...")
+    await app.bot.set_webhook(url=f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}/{TOKEN}")
+    await app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        url_path=TOKEN
+    )
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
